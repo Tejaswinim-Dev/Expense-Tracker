@@ -1,163 +1,98 @@
 
-# Expense Tracker (PWA, Vite + React 18 + Tailwind CSS)
+# Personal Expense Tracker (Vite + React 18 + Tailwind CSS)
 
-A modern, offline-first personal-expense tracker that runs directly in the browser, saves data to **IndexedDB**, and lets you **analyse, filter, and export** your spending in CSV **and** JSON formats.  
+A modern, offline‑first expense tracker that runs entirely in the browser, stores data in **IndexedDB**, and lets you **filter, analyse, and export** your transactions.
 
-Built with **Vite + React 18**, uses **Tailwind CSS** for styling, **Dexie** for storage, **Recharts** for charts, **react-icons** for UI polish, and ships as a full **Progressive Web App** (installable on desktop & mobile).
-
-<div align="center">
-  <img src="docs/demo-light.png" alt="light theme screenshot" width="700"/>
-  <img src="docs/demo-dark.png" alt="dark theme screenshot" width="700"/>
-</div>
+![screenshot](docs/demo-light.png)
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
 | Category | Details |
 |----------|---------|
-| **UX** | Responsive layout (mobile → desktop), dark / light theme toggle (remembers preference), accessible focus rings & ARIA labels |
-| **Data** | IndexedDB persistence via Dexie; CRUD operations, real-time list updates |
-| **Filters** | Category, text search, min/max amount, date range |
-| **Analytics** | Summary card, per-category **pie chart**, daily spend **line chart** (Recharts, auto-resizing) |
-| **Export** | One-click **CSV** and **JSON** download (FileSaver) |
-| **PWA** | Service-worker caching, offline fallback, install prompt; auto-update via `vite-plugin-pwa` |
-| **Tooling** | Hot-reload dev server (Vite), fast production build, ESLint-ready (if you add a config) |
+| **UX** | Responsive grid layout, dark / light theme toggle, keyboard shortcuts (`/` search, **Enter** save, **Esc** cancel), toasts for success & errors, undo‑delete |
+| **Filtering** | Multi‑select category dropdown, live text search, min / max amount, from / to date, dedicated **Apply** button |
+| **Analytics** | Pie chart by category, daily line chart, monthly trend line chart, click‑slice filtering |
+| **Export** | **CSV**, **JSON**, and PDF (data + charts only) |
+| **Data** | Persistent via Dexie 4 (IndexedDB), full CRUD |
+| **PWA** | Installable, offline cache, auto‑update via `vite-plugin-pwa` |
 
 ---
 
-## 🛠 Tech Stack
+## 🏗 Tech Stack
 
-* **Vite 4** + **React 18** (JSX, Fast Refresh)
-* **Tailwind CSS 3** (`darkMode: 'class'`)
-* **Dexie 4** (IndexedDB wrapper)
-* **Recharts 2** (D3-based charts)
-* **react-icons** (Feather icon set)
-* **FileSaver 2** (client-side downloads)
-* **vite-plugin-pwa** (service-worker + manifest)
+* Vite 4 + React 18
+* Tailwind CSS 3 (`darkMode: 'class'`)
+* Dexie 4
+* Recharts 2
+* react-icons, React‑Toastify
+* jsPDF + html2canvas (PDF export)
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-
-| Requirement | Version |
-|-------------|---------|
-| **Node.js** | ≥ 16 (18 recommended) |
-| **npm**     | ≥ 9   `npm --version` |
-
-### Installation
-
 ```bash
-# 1 — clone
-git clone https://github.com/your-org/expense-tracker-vite.git
-cd expense-tracker-vite
-
-# 2 — install deps
+git clone <repo-url>
+cd expense-tracker
 npm install
+npm run dev              # http://localhost:5173
 ```
 
-### Development server
+### Build & preview
 
 ```bash
-npm run dev
-# ➜ http://localhost:5173
+npm run build
+npm run preview
 ```
-
-Vite reloads instantly on file changes.
-
-### Production build
-
-```bash
-npm run build          # output to dist/
-npm run preview        # serve the build locally
-```
-
-> The PWA service-worker is only registered in **production** (preview mode or a real host).
 
 ---
 
-## 📂 Project Structure
+## 🖥️ Project Structure
 
 ```
-├─ public/                  # static assets (optional icons, favicons)
-├─ index.html               # Vite entry
-├─ tailwind.config.js
-├─ postcss.config.js
-├─ vite.config.js
-├─ src/
-│  ├─ main.jsx              # app boot / SW register
-│  ├─ index.css             # Tailwind + custom vars
-│  ├─ db/                   # Dexie schema
-│  │   └─ index.js
-│  ├─ context/
-│  │   ├─ ExpenseContext.jsx
-│  │   └─ ThemeContext.jsx
-│  ├─ utils/
-│  │   ├─ constants.js      # category list
-│  │   └─ export.js         # CSV & JSON helpers
-│  ├─ components/           # UI pieces
-│  │   ├─ Header.jsx
-│  │   ├─ ExpenseForm.jsx
-│  │   ├─ FilterBar.jsx
-│  │   ├─ Summary.jsx
-│  │   ├─ ExpenseList.jsx
-│  │   └─ ExpenseItem.jsx
-│  └─ App.jsx
-└─ package.json
+src/
+ ├─ components/     # UI pieces
+ ├─ context/        # Theme & Expense providers
+ ├─ utils/          # export helpers, constants, pdf.js
+ ├─ db/             # Dexie schema
+ ├─ index.css       # Tailwind + custom utilities
+ └─ App.jsx
 ```
 
 ---
 
 ## 🎨 Theming
 
-* Theme state lives in `ThemeContext`.  
-* `<html>` receives the `dark` class, activating Tailwind `dark:` variants.  
-* Accent colour is a CSS variable `--accent` (orange in light mode, lighter orange in dark).  
-  Change it in `src/index.css` to reskin the entire UI.
+* Theme state lives in `ThemeContext`.
+* CSS variable `--accent` controls the orange highlight (light & dark values).
 
 ---
 
-## 📈 Charts
+## ⌨ Keyboard Shortcuts
 
-* **Pie** = spend per category  
-* **Line** = total spend per day  
-* Auto-resize via `<ResponsiveContainer>`; colours are defined in `Summary.jsx`.
-
----
-
-## 📤 Data Export
-
-| Format | How |
-|--------|-----|
-| **CSV**  | Button in filter bar → `exportCSV()` |
-| **JSON** | Button in filter bar → `exportJSON()` |
-
-Both helpers live in `src/utils/export.js` and rely on **FileSaver** to create downloads client-side.
+* `/` focus on search
+* **Enter** quick‑save (forms & edit row)
+* **Esc** close pop‑overs / cancel edit
 
 ---
 
-## 📱 PWA
+## 📤 Exports
 
-```bash
-# after build
-npm run preview
-# open devtools > Application > "Install"
-```
-
-* Manifest icons live in `public/` – replace `pwa-*.png` with your own.  
-* `vite-plugin-pwa` is configured for **auto-update**; when you deploy a new build, clients silently fetch the latest assets and activate on the next visit.
+| Button | Output |
+|--------|--------|
+| **CSV**  | `expenses.csv` |
+| **JSON** | `expenses.json` |
+| **PDF**  | Screenshot of Summary + ExpenseList, paginated A4 |
 
 ---
 
-## 📝 Roadmap / Ideas
+## 📝 Roadmap Ideas
 
-* Budget targets & monthly roll-over  
-* Multi-currency with live FX rates  
-* User auth + cloud sync (Supabase?)  
-* Unit tests (Vitest / React Testing Library)  
-* CI/CD (GitHub Actions)  
+* Budget envelopes & monthly roll‑over  
+* Cloud sync with Supabase  
+* Multi‑currency with live FX  
 
 Contributions welcome!
 
@@ -165,4 +100,4 @@ Contributions welcome!
 
 ## 📜 License
 
-MIT © 2025 Tejaswini Karri & contributors"# Expense-Tracker" 
+MIT © 2025 Tejaswini Karri & contributors
