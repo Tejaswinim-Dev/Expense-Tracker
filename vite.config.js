@@ -13,7 +13,7 @@ export default defineConfig({
         short_name: 'Expenses',
         start_url: '/',
         display: 'standalone',
-        background_color: '#f8fafc',
+        background_color: '#ffffff',
         theme_color: '#ea580c',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -21,5 +21,5 @@ export default defineConfig({
         ]
       }
     })
-  ],
+  ]
 });

@@ -1,81 +1,81 @@
 import React, { useMemo } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-const COLORS = ['#ea580c','#0284c7','#059669','#9333ea','#f59e0b','#ef4444','#14b8a6'];
+const COLORS=['#ea580c','#0284c7','#059669','#9333ea','#f59e0b','#ef4444','#14b8a6'];
 
-export default function Summary() {
-  const { state } = useExpenses();
+export default function Summary(){
+  const { state, dispatch } = useExpenses();
   const { expenses, filter } = state;
 
-  const filtered = useMemo(() => {
-    return expenses.filter((e) => {
-      const matchCategory = filter.category === 'All' || e.category === filter.category;
-      const matchSearch = !filter.search || (e.description ?? '').toLowerCase().includes(filter.search.toLowerCase());
-      const matchMin = filter.minAmount === '' || e.amount >= Number(filter.minAmount);
-      const matchMax = filter.maxAmount === '' || e.amount <= Number(filter.maxAmount);
-      const matchStart = !filter.startDate || e.date >= new Date(filter.startDate).getTime();
-      const matchEnd = !filter.endDate || e.date <= new Date(filter.endDate).getTime();
-      return matchCategory && matchSearch && matchMin && matchMax && matchStart && matchEnd;
-    });
-  }, [expenses, filter]);
+  const filtered = useMemo(()=> expenses.filter(e=>{
+    const catMatch = !filter.categories.length || filter.categories.includes(e.category);
+    const searchMatch = !filter.search || (e.description ?? '').toLowerCase().includes(filter.search.toLowerCase());
+    const minMatch = filter.minAmount==='' || e.amount >= Number(filter.minAmount);
+    const maxMatch = filter.maxAmount==='' || e.amount <= Number(filter.maxAmount);
+    const startMatch = !filter.startDate || e.date >= new Date(filter.startDate).getTime();
+    const endMatch = !filter.endDate || e.date <= new Date(filter.endDate).getTime();
+    return catMatch && searchMatch && minMatch && maxMatch && startMatch && endMatch;
+  }), [expenses, filter]);
 
   const total = filtered.reduce((s,e)=> s+e.amount,0);
-  const average = filtered.length ? total/filtered.length : 0;
-  const byCategory = filtered.reduce((acc,e)=>{
-    acc[e.category] = (acc[e.category]||0)+e.amount; return acc;
-  },{});
-  const byDate = filtered.reduce((acc,e)=>{
-    const key = new Date(e.date).toLocaleDateString();
-    acc[key] = (acc[key]||0)+e.amount; return acc;
-  },{});
+  const avg = filtered.length ? total / filtered.length : 0;
 
-  const catData = Object.entries(byCategory).map(([k,v])=>({name:k,value:v}));
-  const lineData = Object.entries(byDate)
-    .sort(([a],[b])=> new Date(a)-new Date(b))
-    .map(([d,v])=>({date:d, amount:v}));
+  const byCat = filtered.reduce((a,e)=>{a[e.category]=(a[e.category]||0)+e.amount; return a;}, {});
+  const pieData = Object.entries(byCat).map(([k,v])=>({name:k,value:v}));
+
+  const byDate = filtered.reduce((a,e)=>{const d=new Date(e.date).toLocaleDateString(); a[d]=(a[d]||0)+e.amount; return a;},{});
+  const lineData = Object.entries(byDate).sort(([a],[b])=> new Date(a)-new Date(b)).map(([d,v])=>({date:d,amount:v}));
+
+  const byMonth = filtered.reduce((a,e)=>{ const d=new Date(e.date); const key=`${d.getFullYear()}-${d.getMonth()+1}`; a[key]=(a[key]||0)+e.amount; return a;}, {});
+  const monthData = Object.entries(byMonth).sort(([a],[b])=> new Date(a)-new Date(b)).map(([m,v])=>({month:m,amount:v}));
 
   return (
     <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow mb-6">
-      <h2 className="font-semibold mb-2">Summary</h2>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="font-semibold">Summary</h2>
+        <button onClick={()=>window.print()} className="input inline-flex items-center gap-1" aria-label="Print">🖨️ Print</button>
+      </div>
       <p>Total Spend: <span className="font-medium">₹{total.toFixed(2)}</span></p>
       <p>Transactions: <span className="font-medium">{filtered.length}</span></p>
-      <p>Average Expense: <span className="font-medium">₹{average.toFixed(2)}</span></p>
+      <p>Average Expense: <span className="font-medium">₹{avg.toFixed(2)}</span></p>
 
-      {/* Charts */}
-      {filtered.length > 0 && (
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Pie */}
-          <div className="w-full h-64">
+      {filtered.length>0 && (
+        <div className="grid auto-rows-[16rem] gap-6 mt-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="w-full h-full">
             <ResponsiveContainer>
               <PieChart>
-                <Pie data={catData} dataKey="value" nameKey="name" outerRadius="80%">
-                  {catData.map((_,idx)=> <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius="80%"
+                  onClick={(d)=>{
+                    const cat = d.name;
+                    const nextCats = filter.categories.includes(cat) ? [] : [cat];
+                    dispatch({ type:'SET_FILTER', payload:{...filter, categories: nextCats} });
+                  }}
+                >
+                  {pieData.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
                 </Pie>
-                <Tooltip />
+                <Tooltip/>
               </PieChart>
             </ResponsiveContainer>
           </div>
-          {/* Line */}
-          <div className="w-full h-64">
+          <div className="w-full h-full">
             <ResponsiveContainer>
               <LineChart data={lineData}>
-                <XAxis dataKey="date" />
-                <YAxis />
-                <CartesianGrid strokeDasharray="3 3" />
-                <Tooltip />
-                <Line type="monotone" dataKey="amount" strokeWidth={2} />
+                <XAxis dataKey="date"/><YAxis/><CartesianGrid strokeDasharray="3 3"/><Tooltip/>
+                <Line type="monotone" dataKey="amount" strokeWidth={2}/>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Monthly trend */}
+          <div className="w-full lg:col-span-2 h-full">
+            <ResponsiveContainer>
+              <LineChart data={monthData}>
+                <XAxis dataKey="month"/><YAxis/><CartesianGrid strokeDasharray="3 3"/><Tooltip/>
+                <Line type="monotone" dataKey="amount" strokeWidth={2}/>
               </LineChart>
             </ResponsiveContainer>
           </div>
