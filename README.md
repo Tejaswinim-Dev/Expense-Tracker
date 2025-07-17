@@ -88,16 +88,6 @@ src/
 
 ---
 
-## 📝 Roadmap Ideas
-
-* Budget envelopes & monthly roll‑over  
-* Cloud sync with Supabase  
-* Multi‑currency with live FX  
-
-Contributions welcome!
-
----
-
 ## 📜 License
 
 MIT © 2025 Tejaswini Karri & contributors
